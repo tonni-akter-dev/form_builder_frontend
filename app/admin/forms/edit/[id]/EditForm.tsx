@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
@@ -43,18 +45,9 @@ interface FormField {
   ratingStyle?: "star" | "number" | "emoji";
 }
 
-interface Form {
-  _id: string;
-  title: string;
-  description: string;
-  isPublished: boolean;
-  fields: any[]; // Backend fields
-}
-
 export default function EditForm() {
   const router = useRouter();
   const { id } = useParams();
-  const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -208,7 +201,10 @@ export default function EditForm() {
     const updated = fields.map((field) => {
       if (field.id === id) {
         const options = field.options || [];
-        return { ...field, options: [...options, `Option ${options.length + 1}`] };
+        return {
+          ...field,
+          options: [...options, `Option ${options.length + 1}`],
+        };
       }
       return field;
     });
@@ -286,7 +282,10 @@ export default function EditForm() {
     const updated = fields.map((field) => {
       if (field.id === id) {
         const columns = field.columns || [];
-        return { ...field, columns: [...columns, `Column ${columns.length + 1}`] };
+        return {
+          ...field,
+          columns: [...columns, `Column ${columns.length + 1}`],
+        };
       }
       return field;
     });
@@ -322,28 +321,28 @@ export default function EditForm() {
 
   // Transform frontend fields to backend format
   const transformFieldsForBackend = () => {
-    return fields.map(field => {
+    return fields.map((field) => {
       // Remove the temporary id field
       const { id, ...backendField } = field;
-      
-      if (field.type === 'rating') {
+
+      if (field.type === "rating") {
         return {
           ...backendField,
           ratingMin: field.ratingMin || 1,
           ratingMax: field.ratingMax || 5,
-          ratingStyle: field.ratingStyle || 'star',
-          ratingLabels: field.ratingLabels || { min: '', max: '' }
+          ratingStyle: field.ratingStyle || "star",
+          ratingLabels: field.ratingLabels || { min: "", max: "" },
         };
       }
-      
-      if (field.type === 'number') {
+
+      if (field.type === "number") {
         return {
           ...backendField,
           min: field.min ? Number(field.min) : undefined,
-          max: field.max ? Number(field.max) : undefined
+          max: field.max ? Number(field.max) : undefined,
         };
       }
-      
+
       return backendField;
     });
   };
@@ -352,13 +351,13 @@ export default function EditForm() {
   const handleUpdate = async (publishStatus?: boolean) => {
     // Validate form
     if (!title.trim()) {
-      setError('Form title is required');
+      setError("Form title is required");
       return;
     }
 
-    const invalidFields = fields.filter(field => !field.label.trim());
+    const invalidFields = fields.filter((field) => !field.label.trim());
     if (invalidFields.length > 0) {
-      setError('All questions must have a label');
+      setError("All questions must have a label");
       return;
     }
 
@@ -366,10 +365,10 @@ export default function EditForm() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
-        setError('You must be logged in to update the form');
+        setError("You must be logged in to update the form");
         setSaving(false);
         return;
       }
@@ -378,37 +377,40 @@ export default function EditForm() {
         title,
         description,
         fields: transformFieldsForBackend(),
-        isPublished: publishStatus !== undefined ? publishStatus : isPublished
+        isPublished: publishStatus !== undefined ? publishStatus : isPublished,
       };
 
       await axios.put(`/forms/${id}`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (publishStatus !== undefined) {
         setIsPublished(publishStatus);
-        toast.success(publishStatus ? 'Form published successfully!' : 'Form unpublished');
+        toast.success(
+          publishStatus ? "Form published successfully!" : "Form unpublished",
+        );
       } else {
-        toast.success('Form updated successfully!');
+        toast.success("Form updated successfully!");
       }
-      
+
       // Refresh form data
       const response = await axios.get(`/forms/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       setTitle(response.data.title);
       setDescription(response.data.description);
       setIsPublished(response.data.isPublished);
-      
     } catch (err: any) {
       console.error("Error updating form:", err);
-      setError(err.response?.data?.message || err.message || 'Failed to update form');
-      toast.error('Failed to update form');
+      setError(
+        err.response?.data?.message || err.message || "Failed to update form",
+      );
+      toast.error("Failed to update form");
     } finally {
       setSaving(false);
     }
@@ -416,29 +418,33 @@ export default function EditForm() {
 
   // Handle delete form
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this form? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
-        toast.error('You must be logged in to delete the form');
+        toast.error("You must be logged in to delete the form");
         return;
       }
 
       await axios.delete(`/forms/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      toast.success('Form deleted successfully!');
-      router.push('/admin/forms');
+      toast.success("Form deleted successfully!");
+      router.push("/admin/forms");
     } catch (err: any) {
       console.error("Error deleting form:", err);
-      toast.error(err.response?.data?.error || 'Failed to delete form');
+      toast.error(err.response?.data?.error || "Failed to delete form");
     }
   };
 
@@ -482,7 +488,11 @@ export default function EditForm() {
   );
 
   // Render rating stars preview
-  const renderStars = (rating: number, maxRating: number, interactive: boolean = false) => {
+  const renderStars = (
+    rating: number,
+    maxRating: number,
+    interactive: boolean = false,
+  ) => {
     return (
       <div className="flex gap-1">
         {Array.from({ length: maxRating }, (_, i) => i + 1).map((star) => (
@@ -500,7 +510,11 @@ export default function EditForm() {
   };
 
   // Render emoji ratings preview
-  const renderEmojis = (rating: number, maxRating: number, interactive: boolean = false) => {
+  const renderEmojis = (
+    rating: number,
+    maxRating: number,
+    interactive: boolean = false,
+  ) => {
     const emojis = ["😞", "😐", "🙂", "😊", "😄"];
     return (
       <div className="flex gap-2">
@@ -521,12 +535,14 @@ export default function EditForm() {
   // Render field in edit mode
   const renderField = (field: FormField) => {
     const isSelected = selectedFieldId === field.id;
-    
+
     return (
       <div
         key={field.id}
         className={`bg-white rounded-xl shadow-sm border-2 transition-all ${
-          isSelected ? "border-[#673AB7]" : "border-gray-200 hover:border-gray-300"
+          isSelected
+            ? "border-[#673AB7]"
+            : "border-gray-200 hover:border-gray-300"
         }`}
         onClick={() => setSelectedFieldId(field.id)}
       >
@@ -545,7 +561,9 @@ export default function EditForm() {
               <input
                 type="text"
                 value={field.description || ""}
-                onChange={(e) => updateField(field.id, "description", e.target.value)}
+                onChange={(e) =>
+                  updateField(field.id, "description", e.target.value)
+                }
                 className="w-full text-sm text-gray-500 border-0 focus:ring-0 p-0 mt-1 outline-none placeholder:text-gray-300"
                 placeholder="Description (optional)"
                 onClick={(e) => e.stopPropagation()}
@@ -621,21 +639,37 @@ export default function EditForm() {
                 />
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">Minimum</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Minimum
+                    </label>
                     <input
                       type="number"
                       value={field.min || ""}
-                      onChange={(e) => updateField(field.id, "min", e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        updateField(
+                          field.id,
+                          "min",
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                       placeholder="No minimum"
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">Maximum</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Maximum
+                    </label>
                     <input
                       type="number"
                       value={field.max || ""}
-                      onChange={(e) => updateField(field.id, "max", e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        updateField(
+                          field.id,
+                          "max",
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                       placeholder="No maximum"
                     />
@@ -644,7 +678,9 @@ export default function EditForm() {
               </div>
             )}
 
-            {(field.type === "radio" || field.type === "select" || field.type === "checkbox") && (
+            {(field.type === "radio" ||
+              field.type === "select" ||
+              field.type === "checkbox") && (
               <div className="space-y-2">
                 {field.options?.map((option, index) => (
                   <div key={index} className="flex items-center gap-3">
@@ -660,7 +696,9 @@ export default function EditForm() {
                     <input
                       type="text"
                       value={option}
-                      onChange={(e) => updateOption(field.id, index, e.target.value)}
+                      onChange={(e) =>
+                        updateOption(field.id, index, e.target.value)
+                      }
                       className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                     />
                     <button
@@ -668,8 +706,18 @@ export default function EditForm() {
                       onClick={() => deleteOption(field.id, index)}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -689,19 +737,31 @@ export default function EditForm() {
                 <div className="flex items-center gap-6">
                   <select
                     value={field.ratingStyle}
-                    onChange={(e) => updateField(field.id, "ratingStyle", e.target.value as "star" | "number" | "emoji")}
+                    onChange={(e) =>
+                      updateField(
+                        field.id,
+                        "ratingStyle",
+                        e.target.value as "star" | "number" | "emoji",
+                      )
+                    }
                     className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                   >
                     <option value="star">Stars</option>
                     <option value="number">Numbers</option>
                     <option value="emoji">Emojis</option>
                   </select>
-                  
+
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       value={field.ratingMin || 1}
-                      onChange={(e) => updateField(field.id, "ratingMin", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateField(
+                          field.id,
+                          "ratingMin",
+                          Number(e.target.value),
+                        )
+                      }
                       className="w-16 px-2 py-1 border border-gray-200 rounded text-sm text-center"
                       min="1"
                     />
@@ -709,7 +769,13 @@ export default function EditForm() {
                     <input
                       type="number"
                       value={field.ratingMax || 5}
-                      onChange={(e) => updateField(field.id, "ratingMax", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateField(
+                          field.id,
+                          "ratingMax",
+                          Number(e.target.value),
+                        )
+                      }
                       className="w-16 px-2 py-1 border border-gray-200 rounded text-sm text-center"
                       min="1"
                     />
@@ -718,27 +784,35 @@ export default function EditForm() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Min label</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Min label
+                    </label>
                     <input
                       type="text"
                       value={field.ratingLabels?.min || ""}
-                      onChange={(e) => updateField(field.id, "ratingLabels", {
-                        ...field.ratingLabels,
-                        min: e.target.value
-                      })}
+                      onChange={(e) =>
+                        updateField(field.id, "ratingLabels", {
+                          ...field.ratingLabels,
+                          min: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                       placeholder="e.g., Poor"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Max label</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Max label
+                    </label>
                     <input
                       type="text"
                       value={field.ratingLabels?.max || ""}
-                      onChange={(e) => updateField(field.id, "ratingLabels", {
-                        ...field.ratingLabels,
-                        max: e.target.value
-                      })}
+                      onChange={(e) =>
+                        updateField(field.id, "ratingLabels", {
+                          ...field.ratingLabels,
+                          max: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                       placeholder="e.g., Excellent"
                     />
@@ -748,11 +822,19 @@ export default function EditForm() {
                 {/* Preview */}
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-400 mb-3">Preview:</p>
-                  {field.ratingStyle === "star" && renderStars(3, field.ratingMax || 5)}
-                  {field.ratingStyle === "emoji" && renderEmojis(2, field.ratingMax || 5)}
+                  {field.ratingStyle === "star" &&
+                    renderStars(3, field.ratingMax || 5)}
+                  {field.ratingStyle === "emoji" &&
+                    renderEmojis(2, field.ratingMax || 5)}
                   {field.ratingStyle === "number" && (
                     <div className="flex gap-2">
-                      {Array.from({ length: (field.ratingMax || 5) - (field.ratingMin || 1) + 1 }, (_, i) => (field.ratingMin || 1) + i).map((num) => (
+                      {Array.from(
+                        {
+                          length:
+                            (field.ratingMax || 5) - (field.ratingMin || 1) + 1,
+                        },
+                        (_, i) => (field.ratingMin || 1) + i,
+                      ).map((num) => (
                         <button
                           key={num}
                           type="button"
@@ -786,19 +868,34 @@ export default function EditForm() {
 
             {field.type === "file_upload" && (
               <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
-                <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <svg
+                  className="mx-auto h-10 w-10 text-gray-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
                 </svg>
-                <p className="mt-2 text-sm text-gray-500">Click to upload or drag and drop</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Click to upload or drag and drop
+                </p>
               </div>
             )}
 
-            {(field.type === "checkbox_grid" || field.type === "multiple_choice_grid") && (
+            {(field.type === "checkbox_grid" ||
+              field.type === "multiple_choice_grid") && (
               <div className="space-y-6">
                 {/* Rows */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Rows</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Rows
+                    </span>
                     <button
                       type="button"
                       onClick={() => addRow(field.id)}
@@ -813,7 +910,9 @@ export default function EditForm() {
                         <input
                           type="text"
                           value={row}
-                          onChange={(e) => updateRow(field.id, index, e.target.value)}
+                          onChange={(e) =>
+                            updateRow(field.id, index, e.target.value)
+                          }
                           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                         />
                         <button
@@ -821,8 +920,18 @@ export default function EditForm() {
                           onClick={() => deleteRow(field.id, index)}
                           className="p-1 text-gray-400 hover:text-red-500"
                         >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -833,7 +942,9 @@ export default function EditForm() {
                 {/* Columns */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Columns</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Columns
+                    </span>
                     <button
                       type="button"
                       onClick={() => addColumn(field.id)}
@@ -848,7 +959,9 @@ export default function EditForm() {
                         <input
                           type="text"
                           value={column}
-                          onChange={(e) => updateColumn(field.id, index, e.target.value)}
+                          onChange={(e) =>
+                            updateColumn(field.id, index, e.target.value)
+                          }
                           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none"
                         />
                         <button
@@ -856,8 +969,18 @@ export default function EditForm() {
                           onClick={() => deleteColumn(field.id, index)}
                           className="p-1 text-gray-400 hover:text-red-500"
                         >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -877,13 +1000,19 @@ export default function EditForm() {
     return (
       <div key={field.id} className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-start gap-3">
-          <span className="text-sm font-medium text-gray-400 min-w-[24px]">{index + 1}.</span>
+          <span className="text-sm font-medium text-gray-400 min-w-6">
+            {index + 1}.
+          </span>
           <div className="flex-1">
             <div className="mb-3">
-              <span className="text-base font-medium text-gray-800">{field.label}</span>
+              <span className="text-base font-medium text-gray-800">
+                {field.label}
+              </span>
               {field.required && <span className="text-red-500 ml-1">*</span>}
               {field.description && (
-                <p className="text-sm text-gray-500 mt-1">{field.description}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {field.description}
+                </p>
               )}
             </div>
 
@@ -917,7 +1046,10 @@ export default function EditForm() {
               {field.type === "radio" && (
                 <div className="space-y-2">
                   {field.options?.map((option, idx) => (
-                    <label key={idx} className="flex items-center gap-3 cursor-pointer">
+                    <label
+                      key={idx}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
                       <input
                         type="radio"
                         name={`preview-${field.id}`}
@@ -932,7 +1064,10 @@ export default function EditForm() {
               {field.type === "checkbox" && (
                 <div className="space-y-2">
                   {field.options?.map((option, idx) => (
-                    <label key={idx} className="flex items-center gap-3 cursor-pointer">
+                    <label
+                      key={idx}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         className="w-4 h-4 text-[#673AB7] border-gray-300 rounded focus:ring-[#673AB7]"
@@ -947,18 +1082,28 @@ export default function EditForm() {
                 <select className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#673AB7] focus:border-transparent outline-none">
                   <option value="">Choose an option</option>
                   {field.options?.map((option, idx) => (
-                    <option key={idx} value={option}>{option}</option>
+                    <option key={idx} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               )}
 
               {field.type === "rating" && (
                 <div>
-                  {field.ratingStyle === "star" && renderStars(0, field.ratingMax || 5, true)}
-                  {field.ratingStyle === "emoji" && renderEmojis(0, field.ratingMax || 5, true)}
+                  {field.ratingStyle === "star" &&
+                    renderStars(0, field.ratingMax || 5, true)}
+                  {field.ratingStyle === "emoji" &&
+                    renderEmojis(0, field.ratingMax || 5, true)}
                   {field.ratingStyle === "number" && (
                     <div className="flex gap-2">
-                      {Array.from({ length: (field.ratingMax || 5) - (field.ratingMin || 1) + 1 }, (_, i) => (field.ratingMin || 1) + i).map((num) => (
+                      {Array.from(
+                        {
+                          length:
+                            (field.ratingMax || 5) - (field.ratingMin || 1) + 1,
+                        },
+                        (_, i) => (field.ratingMin || 1) + i,
+                      ).map((num) => (
                         <button
                           key={num}
                           type="button"
@@ -988,21 +1133,37 @@ export default function EditForm() {
 
               {field.type === "file_upload" && (
                 <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-[#673AB7] transition-colors cursor-pointer">
-                  <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  <svg
+                    className="mx-auto h-10 w-10 text-gray-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
                   </svg>
-                  <p className="mt-2 text-sm text-gray-500">Click to upload or drag and drop</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Click to upload or drag and drop
+                  </p>
                 </div>
               )}
 
-              {(field.type === "checkbox_grid" || field.type === "multiple_choice_grid") && (
+              {(field.type === "checkbox_grid" ||
+                field.type === "multiple_choice_grid") && (
                 <div className="overflow-x-auto">
                   <table className="w-full border border-gray-200 rounded-lg">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                         {field.columns?.map((col, idx) => (
-                          <th key={idx} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            key={idx}
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             {col}
                           </th>
                         ))}
@@ -1017,7 +1178,10 @@ export default function EditForm() {
                           {field.columns?.map((_, colIdx) => (
                             <td key={colIdx} className="px-4 py-3 text-center">
                               {field.type === "checkbox_grid" ? (
-                                <input type="checkbox" className="w-4 h-4 text-[#673AB7] border-gray-300 rounded focus:ring-[#673AB7]" />
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 text-[#673AB7] border-gray-300 rounded focus:ring-[#673AB7]"
+                                />
                               ) : (
                                 <input
                                   type="radio"
@@ -1060,28 +1224,48 @@ export default function EditForm() {
             onClick={() => router.back()}
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg
+              className="h-5 w-5 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back
           </button>
-
-          <div className="flex items-center gap-3">
+         
+        </div>
+        {/* Mode toggle */}
+        <div className="flex justify-end mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 inline-flex">
             <button
-              onClick={handleDelete}
-              className="px-4 py-2 text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-            >
-              Delete
-            </button>
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                isPublished
-                  ? "bg-green-50 text-green-700"
-                  : "bg-yellow-50 text-yellow-700"
+              type="button"
+              onClick={() => setIsPreviewMode(false)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !isPreviewMode
+                  ? "bg-[#673AB7] text-white"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              {isPublished ? "Published" : "Draft"}
-            </span>
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPreviewMode(true)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isPreviewMode
+                  ? "bg-[#673AB7] text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Preview
+            </button>
           </div>
         </div>
 
@@ -1114,43 +1298,24 @@ export default function EditForm() {
           </div>
         )}
 
-        {/* Mode toggle */}
-        <div className="flex justify-end mb-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 inline-flex">
-            <button
-              type="button"
-              onClick={() => setIsPreviewMode(false)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !isPreviewMode 
-                  ? "bg-[#673AB7] text-white" 
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPreviewMode(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isPreviewMode 
-                  ? "bg-[#673AB7] text-white" 
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Preview
-            </button>
-          </div>
-        </div>
-
         {/* Form fields */}
         <div className="space-y-3">
           {isPreviewMode ? (
-            // Preview mode
             <>
               {fields.length === 0 ? (
                 <div className="bg-white rounded-xl shadow-sm p-12 text-center text-gray-500">
-                  <svg className="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-300 mb-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                   <p>No questions added yet.</p>
                 </div>
@@ -1171,8 +1336,18 @@ export default function EditForm() {
                   onClick={() => setShowFieldTypes(!showFieldTypes)}
                   className="bg-white border border-gray-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md text-gray-700 font-medium flex items-center gap-2 transition-all hover:border-[#673AB7]"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   Add question
                 </button>
@@ -1201,10 +1376,10 @@ export default function EditForm() {
               onClick={() => handleUpdate()}
               disabled={saving}
               className={`px-8 py-2 bg-[#673AB7] hover:bg-[#5E35B1] text-white font-medium rounded-lg shadow-sm transition-colors ${
-                saving ? 'opacity-50 cursor-not-allowed' : ''
+                saving ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
 
             <button
@@ -1221,10 +1396,22 @@ export default function EditForm() {
         <div className="mt-4 text-center">
           <div className="inline-flex items-center gap-1.5 text-xs text-gray-400">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
             </svg>
             <span>Google Forms</span>
           </div>
