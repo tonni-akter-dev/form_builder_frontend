@@ -13,7 +13,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside
         className={`bg-white shadow-lg w-64 p-5 space-y-4 fixed md:static h-screen z-40 transform 
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 transition-transform`}>
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 transition-transform`}
+      >
         <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
 
         <nav className="flex flex-col gap-3 text-gray-700">
@@ -24,9 +25,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Link href="/admin/forms" className="hover:bg-gray-100 p-2 rounded">
             Forms
           </Link>
-
-          <Link href="/admin/upload" className="hover:bg-gray-100 p-2 rounded">
-            Upload Data
+          <Link
+            href="/admin/forms/new"
+            className="hover:bg-gray-100 p-2 rounded"
+          >
+            Add New Form
           </Link>
         </nav>
       </aside>
@@ -45,7 +48,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <button className="md:hidden text-xl" onClick={() => setOpen(!open)}>
             ☰
           </button>
-
           <h1 className="font-semibold text-lg">Admin Dashboard</h1>
         </header>
 
