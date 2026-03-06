@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -6,13 +7,16 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import { toast } from "react-toastify";
 
+interface Answer {
+  fieldId: string;
+  value: any;
+  fieldLabel?: string;
+}
+
 interface Response {
   _id: string;
   formId: string;
-  answers: Array<{
-    fieldId: string;
-    value: any;
-  }>;
+  answers: Answer[];
   submittedAt: string;
 }
 
@@ -30,77 +34,143 @@ interface Form {
 
 const FormResponsesPage = () => {
   const router = useRouter();
-  const { formId } = useParams();
+  const params = useParams();
+  const formId = params?.id as string;
+
+  console.log("Form ID from params:", formId);
+
   const [form, setForm] = useState<Form | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [loading, setLoading] = useState(true);
   const [exportLoading, setExportLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!formId) return;
+    if (!formId) {
+      setError("No form ID provided");
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
+        setLoading(true);
+        setError(null);
 
-        // Fetch form details and responses
+        const token = localStorage.getItem("token");
+        if (!token) {
+          toast.error("Please login to view responses");
+          router.push("/login");
+          return;
+        }
+
+        const headers = { Authorization: `Bearer ${token}` };
+        // Fetch form details and responses in parallel
         const [formRes, responsesRes] = await Promise.all([
           axios.get(`/forms/${formId}`, { headers }),
           axios.get(`/responses/${formId}`, { headers }),
         ]);
 
+        // console.log("Form data received:", formRes.data);
+        console.log("Responses data received:", responsesRes.data.responses);
+
         setForm(formRes.data);
-        setResponses(responsesRes.data);
+        setResponses(responsesRes.data.responses || []);
+
       } catch (err: any) {
         console.error("Error fetching responses:", err);
-        toast.error(err.response?.data?.error || "Failed to load responses");
+
+        let errorMessage = "Failed to load responses";
+
+        if (err.response) {
+          console.error("Error response:", err.response.data);
+          console.error("Error status:", err.response.status);
+
+          if (err.response.status === 401) {
+            errorMessage = "Session expired. Please login again.";
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            router.push("/login");
+          } else if (err.response.status === 403) {
+            errorMessage = "You don't have permission to view these responses.";
+          } else if (err.response.status === 404) {
+            errorMessage = "Form not found.";
+          } else {
+            errorMessage =
+              err.response.data?.error ||
+              err.response.data?.message ||
+              errorMessage;
+          }
+        } else if (err.request) {
+          errorMessage = "Network error. Please check your connection.";
+        }
+
+        setError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [formId]);
+  }, [formId, router]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch (err) {
+      return dateString;
+    }
   };
 
-  const getFieldValue = (answer: any, field: FormField) => {
-    const value = answer?.value;
-    
-    if (value === null || value === undefined) return "-";
-    
-    if (field.type === "checkbox" && Array.isArray(value)) {
-      return value.join(", ") || "-";
+  const getFieldValue = (answer: Answer | undefined, field: FormField) => {
+    if (!answer || answer.value === null || answer.value === undefined)
+      return "-";
+
+    const value = answer.value;
+
+    try {
+      if (field.type === "checkbox" && Array.isArray(value)) {
+        return value.join(", ") || "-";
+      }
+
+      if (
+        field.type === "checkbox_grid" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        const selections: string[] = [];
+        Object.entries(value).forEach(([row, cols]) => {
+          if (Array.isArray(cols) && cols.length > 0) {
+            selections.push(`${row}: ${cols.join(", ")}`);
+          }
+        });
+        return selections.join("; ") || "-";
+      }
+
+      if (
+        field.type === "multiple_choice_grid" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
+        const selections: string[] = [];
+        Object.entries(value).forEach(([row, col]) => {
+          if (col) {
+            selections.push(`${row}: ${col}`);
+          }
+        });
+        return selections.join("; ") || "-";
+      }
+
+      if (typeof value === "object") {
+        return JSON.stringify(value);
+      }
+
+      return String(value);
+    } catch (err) {
+      console.error("Error formatting field value:", err);
+      return "-";
     }
-    
-    if (field.type === "checkbox_grid" && typeof value === "object") {
-      const selections: string[] = [];
-      Object.entries(value).forEach(([row, cols]) => {
-        if (Array.isArray(cols) && cols.length > 0) {
-          selections.push(`${row}: ${cols.join(", ")}`);
-        }
-      });
-      return selections.join("; ") || "-";
-    }
-    
-    if (field.type === "multiple_choice_grid" && typeof value === "object") {
-      const selections: string[] = [];
-      Object.entries(value).forEach(([row, col]) => {
-        if (col) {
-          selections.push(`${row}: ${col}`);
-        }
-      });
-      return selections.join("; ") || "-";
-    }
-    
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-    
-    return String(value);
   };
 
   const exportToCSV = () => {
@@ -125,11 +195,15 @@ const FormResponsesPage = () => {
           response._id,
           formatDate(response.submittedAt),
           ...form.fields.map((field) => {
-            const answer = response.answers.find((a) => a.fieldId === field._id);
+            const answer = response.answers.find(
+              (a) => a.fieldId === field._id,
+            );
             return getFieldValue(answer, field);
           }),
         ];
-        return row.map(cell => `"${cell}"`).join(",");
+        return row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",");
       });
 
       // Combine headers and rows
@@ -140,10 +214,14 @@ const FormResponsesPage = () => {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", `${form.title}_responses.csv`);
+      link.setAttribute(
+        "download",
+        `${form.title.replace(/[^a-z0-9]/gi, "_")}_responses.csv`,
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast.success("Responses exported successfully!");
     } catch (err) {
@@ -165,9 +243,49 @@ const FormResponsesPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+          <svg
+            className="mx-auto h-12 w-12 text-red-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-red-800">Error</h3>
+          <p className="mt-2 text-red-600">{error}</p>
+          <button
+            onClick={() => router.push("/admin/forms")}
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Go to Forms List
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!form) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Form not found</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" px-6">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
@@ -191,7 +309,7 @@ const FormResponsesPage = () => {
               Back
             </button>
             <h1 className="text-2xl font-bold text-gray-900">
-              {form?.title} - Responses
+              {form.title} - Responses
             </h1>
           </div>
 
@@ -220,6 +338,13 @@ const FormResponsesPage = () => {
               {exportLoading ? "Exporting..." : "Export to CSV"}
             </button>
           </div>
+        </div>
+
+        {/* Debug Info */}
+        <div className="mb-4 text-sm text-gray-600">
+          <p>Form ID: {formId}</p>
+          <p>Fields count: {form.fields?.length || 0}</p>
+          <p>Responses count: {responses.length}</p>
         </div>
 
         {/* Responses Table */}
@@ -257,7 +382,7 @@ const FormResponsesPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Submitted At
                     </th>
-                    {form?.fields.map((field) => (
+                    {form.fields?.map((field) => (
                       <th
                         key={field._id}
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -276,17 +401,18 @@ const FormResponsesPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDate(response.submittedAt)}
                       </td>
-                      {form?.fields.map((field) => {
-                        const answer = response.answers.find(
-                          (a) => a.fieldId === field._id
+                      {form.fields?.map((field) => {
+                        const answer = response.answers?.find(
+                          (a) => a.fieldId === field._id,
                         );
+                        const value = getFieldValue(answer, field);
                         return (
                           <td
                             key={field._id}
                             className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"
-                            title={getFieldValue(answer, field)}
+                            title={value}
                           >
-                            {getFieldValue(answer, field)}
+                            {value}
                           </td>
                         );
                       })}

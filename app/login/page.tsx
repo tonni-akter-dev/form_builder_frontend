@@ -59,7 +59,7 @@ export default function LoginPage() {
       if (redirectTo && !redirectTo.includes("/auth/")) {
         window.location.href = redirectTo;
       } else {
-        window.location.href = "/dashboard";
+        window.location.href = "/admin/forms";
       }
     } catch (error: any) {
       console.error("Login error:", error);

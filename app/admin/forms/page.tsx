@@ -308,7 +308,7 @@ const AllForms = () => {
                     {/* View Responses Button */}
                     <button
                       onClick={() =>
-                        router.push(`/admin/forms/${form._id}/responses`)
+                        router.push(`/admin/forms/responses/${form._id}`)
                       }
                       title="View responses"
                       className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"

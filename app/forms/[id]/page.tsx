@@ -258,7 +258,7 @@ const PublicFormPage = () => {
 
       const allAnswers = [...answers, ...fileAnswers];
 
-      console.log("Submitting answers:", allAnswers); // Debug log
+      console.log("Submitting answers:", allAnswers); 
 
       await axios.post("/responses", {
         formId: id,
@@ -266,7 +266,7 @@ const PublicFormPage = () => {
       });
 
       toast.success("Form submitted successfully!");
-      router.push(`/form/${id}/success`);
+      router.push(`/forms/success/${id}`);
     } catch (err: any) {
       console.error("Error submitting form:", err);
       toast.error(err.response?.data?.error || "Failed to submit form");
@@ -706,7 +706,7 @@ const PublicFormPage = () => {
         <div className="text-center p-8 bg-white rounded-lg shadow-md">
           <h3 className="text-lg font-medium text-gray-900">Form not found</h3>
           <p className="mt-2 text-gray-600">
-            The form you're looking for doesn't exist.
+            {`The form you're looking for doesn't exist.`}
           </p>
         </div>
       </div>

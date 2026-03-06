@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // // /* eslint-disable react-hooks/purity */
 // // "use client";
 
@@ -2307,10 +2308,8 @@ export default function NewForm() {
         title,
         description,
         fields: transformFieldsForBackend(),
-        isPublished: false // Default to unpublished, admin can publish later
+        isPublished: true // Default to unpublished, admin can publish later
       };
-
-      console.log('Submitting form:', formData);
 
       const response = await axios.post("/forms", formData, {
         headers: {
