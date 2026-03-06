@@ -6,21 +6,16 @@ import { useRouter } from "next/navigation";
 import axios from "@/lib/axios"; // Make sure this points to your axios instance
 import { toast } from "react-toastify";
 // At the top of your AllForms.js file, add these imports:
-import {
-  RxLink2,
-  RxEyeOpen,
-  RxPencil1,
-  RxTrash,
-} from "react-icons/rx";
+import { RxLink2, RxEyeOpen, RxPencil1, RxTrash } from "react-icons/rx";
 import { FaRegComments } from "react-icons/fa";
 
 interface Form {
-  _id: string; 
+  _id: string;
   title: string;
   description: string;
   isPublished: boolean;
   createdAt: string;
-  updatedAt: string; 
+  updatedAt: string;
   response_count?: number;
 }
 
