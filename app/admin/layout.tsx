@@ -1,22 +1,57 @@
+"use client";
+
 import Link from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { ToastContainer } from "react-toastify";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       <ToastContainer />
-      <nav className="bg-white shadow p-4">
-        <div className="container mx-auto flex gap-4">
-          <Link href="/admin" className="font-bold">
+      {/* Sidebar */}
+      <aside
+        className={`bg-white shadow-lg w-64 p-5 space-y-4 fixed md:static h-screen z-40 transform 
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 transition-transform`}>
+        <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
+
+        <nav className="flex flex-col gap-3 text-gray-700">
+          <Link href="/admin" className="hover:bg-gray-100 p-2 rounded">
             Dashboard
           </Link>
-          <Link href="/admin/forms">Forms</Link>
-          <Link href="/admin/upload">Upload Data</Link>
-          <Link href="/admin">Visits</Link>
-        </div>
-      </nav>
-      <main className="container mx-auto p-4">{children}</main>
+
+          <Link href="/admin/forms" className="hover:bg-gray-100 p-2 rounded">
+            Forms
+          </Link>
+
+          <Link href="/admin/upload" className="hover:bg-gray-100 p-2 rounded">
+            Upload Data
+          </Link>
+        </nav>
+      </aside>
+      {/* Overly for mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/30 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Header */}
+        <header className="bg-white shadow px-4 py-3 flex items-center justify-between">
+          <button className="md:hidden text-xl" onClick={() => setOpen(!open)}>
+            ☰
+          </button>
+
+          <h1 className="font-semibold text-lg">Admin Dashboard</h1>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-6 flex-1 overflow-y-auto">{children}</main>
+      </div>
     </div>
   );
 }
