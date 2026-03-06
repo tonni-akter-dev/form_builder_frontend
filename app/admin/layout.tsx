@@ -33,25 +33,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </Link>
         </nav>
       </aside>
-      {/* Overly for mobile */}
       {open && (
         <div
           className="fixed inset-0 bg-black/30 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Header */}
         <header className="bg-white shadow px-4 py-3 flex items-center justify-between">
           <button className="md:hidden text-xl" onClick={() => setOpen(!open)}>
             ☰
           </button>
           <h1 className="font-semibold text-lg">Admin Dashboard</h1>
         </header>
-
-        {/* Page Content */}
         <main className="p-6 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
