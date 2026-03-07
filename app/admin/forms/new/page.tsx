@@ -277,7 +277,7 @@ export default function NewForm() {
   // Transform frontend fields to backend format
   const transformFieldsForBackend = () => {
     return fields.map((field) => {
-      const { ...backendField } = field;
+      const { id, ...backendField } = field;
       if (field.type === "rating") {
         return {
           ...backendField,
