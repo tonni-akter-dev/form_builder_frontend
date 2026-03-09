@@ -6,6 +6,7 @@
 import { useState } from "react";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 // Supported field types - matching backend schema
 type FieldType =
@@ -340,7 +341,7 @@ export default function NewForm() {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      toast.success("Form created succesfully");
       router.push("/admin/forms");
     } catch (err: any) {
       setError(
