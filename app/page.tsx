@@ -13,13 +13,26 @@ export default function SignupPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    className: "",
+    rollNumber: "",
+    schoolName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const classOptions = [
+    "Class 6",
+    "Class 7",
+    "Class 8",
+    "Class 9",
+    "Class 10",
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -27,8 +40,54 @@ export default function SignupPage() {
     }
   };
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!formData.className) {
+      newErrors.className = "Please select a class";
+    }
+
+    if (!formData.rollNumber.trim()) {
+      newErrors.rollNumber = "Roll number is required";
+    }
+
+    if (!formData.schoolName.trim()) {
+      newErrors.schoolName = "School name is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -36,16 +95,21 @@ export default function SignupPage() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        className: formData.className,
+        rollNumber: formData.rollNumber,
+        schoolName: formData.schoolName,
+        role: "student",
       });
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      router.push("/dashboard");
+      // router.push("/login");
     } catch (error: any) {
       console.error("Signup error:", error);
       setErrors({
         form:
           error.response?.data?.msg ||
+          error.response?.data?.message ||
           "Failed to create account. Please try again.",
       });
     } finally {
@@ -82,14 +146,14 @@ export default function SignupPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Username field */}
               <div>
                 <label
                   htmlFor="username"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Username
+                  Username <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -130,7 +194,7 @@ export default function SignupPage() {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Email address
+                  Email address <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -165,13 +229,156 @@ export default function SignupPage() {
                 )}
               </div>
 
+              {/* Class Selection */}
+              <div>
+                <label
+                  htmlFor="className"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Class <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <select
+                    id="className"
+                    name="className"
+                    value={formData.className}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-10 py-3 border ${
+                      errors.className ? "border-red-300" : "border-gray-300"
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white`}
+                  >
+                    <option value="">Select your class</option>
+                    {classOptions.map((cls) => (
+                      <option key={cls} value={cls}>
+                        {cls}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                {errors.className && (
+                  <p className="mt-1 text-xs text-red-600">{errors.className}</p>
+                )}
+              </div>
+
+              {/* Roll Number */}
+              <div>
+                <label
+                  htmlFor="rollNumber"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Roll Number <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 20h10M5 8h14M5 4h14M5 12h14M5 16h14"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="rollNumber"
+                    name="rollNumber"
+                    type="text"
+                    value={formData.rollNumber}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-3 py-3 border ${
+                      errors.rollNumber ? "border-red-300" : "border-gray-300"
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                    placeholder="Enter your roll number"
+                  />
+                </div>
+                {errors.rollNumber && (
+                  <p className="mt-1 text-xs text-red-600">{errors.rollNumber}</p>
+                )}
+              </div>
+
+              {/* School Name */}
+              <div>
+                <label
+                  htmlFor="schoolName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  School Name <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    id="schoolName"
+                    name="schoolName"
+                    type="text"
+                    value={formData.schoolName}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-3 py-3 border ${
+                      errors.schoolName ? "border-red-300" : "border-gray-300"
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                    placeholder="Enter your school name"
+                  />
+                </div>
+                {errors.schoolName && (
+                  <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>
+                )}
+              </div>
+
               {/* Password field */}
               <div>
                 <label
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -245,6 +452,9 @@ export default function SignupPage() {
                 {errors.password && (
                   <p className="mt-1 text-xs text-red-600">{errors.password}</p>
                 )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Password must be at least 6 characters
+                </p>
               </div>
 
               {/* Confirm Password field */}
@@ -253,7 +463,7 @@ export default function SignupPage() {
                   htmlFor="confirmPassword"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Confirm password
+                  Confirm password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -333,7 +543,27 @@ export default function SignupPage() {
                 )}
               </div>
 
-              {/* Terms and conditions */}
+              {/* Info message */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-700 flex items-center gap-2">
+                  <svg
+                    className="h-4 w-4 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>
+                    All fields marked with <span className="text-red-500">*</span> are required
+                  </span>
+                </p>
+              </div>
 
               {/* Submit button */}
               <button
