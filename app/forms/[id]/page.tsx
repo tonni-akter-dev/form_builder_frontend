@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // /* eslint-disable @next/next/no-img-element */
 // /* eslint-disable react-hooks/exhaustive-deps */
 // /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -2637,7 +2638,7 @@ const PublicFormPage = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h3 className="mt-4 text-lg font-medium text-gray-900">Exam not found</h3>
-          <p className="mt-2 text-gray-600">The exam you're looking for doesn't exist or has been removed.</p>
+          <p className="mt-2 text-gray-600">{`The exam you're looking for doesn't exist or has been removed.`}</p>
         </div>
       </div>
     );
