@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "@/lib/axios";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     username: "",
     email: "",

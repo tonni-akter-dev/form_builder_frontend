@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface FormField {
   id: string;
@@ -142,7 +143,7 @@ export default function FormDesignShowcase() {
     console.log('Form data:', data);
     setTimeout(() => {
       setSubmitting(false);
-      alert('Form submitted successfully! (This is a demo)');
+      toast.success('Form submitted successfully! (This is a demo)');
     }, 2000);
   };
 
