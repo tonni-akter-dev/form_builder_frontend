@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </aside>
       {open && (
         <div
-          className="fixed inset-0 bg-black/30 md:hidden"
+          className="fixed inset-0 bg-black/50 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

@@ -1,11 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "@/lib/axios";
 import { toast } from "react-toastify";
-import Link from "next/link";
+
+interface Answer {
+  fieldId: string;
+  value: any;
+  fieldLabel?: string;
+  isCorrect?: boolean;
+  marksAwarded?: number;
+  correctAnswer?: any;
+  fileUrls?: string[];
+  needsManualGrading?: boolean;
+  teacherFeedback?: string;
+  totalMarks?: number;
+}
 
 interface AttemptedExam {
   _id: string;
@@ -18,19 +32,14 @@ interface AttemptedExam {
     duration: number;
     totalMarks: number;
   };
-  answers: any[];
+  answers: Answer[];
   submittedAt: string;
   totalMarks: number;
   obtainedMarks: number;
   percentage: number;
   resultStatus: "pass" | "fail" | "pending";
   timeSpent: number;
-  feedback?: string;
-  teacherNotes?: Array<{
-    fieldId: string;
-    fieldLabel: string;
-    note: string;
-  }>;
+  overallFeedback?: string;
 }
 
 const StudentDashboard = () => {
@@ -39,6 +48,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedExam, setSelectedExam] = useState<AttemptedExam | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAttempts = async () => {
@@ -146,6 +156,55 @@ const StudentDashboard = () => {
     setShowFeedbackModal(true);
   };
 
+  // Function to open image with stop propagation
+  const openImage = (url: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage(url);
+  };
+
+  const renderFileAttachments = (answer: Answer | undefined) => {
+    if (!answer?.fileUrls || answer.fileUrls.length === 0) return null;
+
+    return (
+      <div className="mt-2">
+        <p className="text-xs text-gray-500 mb-1">
+          Attached Files ({answer.fileUrls.length}):
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {answer.fileUrls.map((url, idx) => {
+            const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+            return isImage ? (
+              <button
+                key={idx}
+                onClick={(e) => openImage(url, e)}
+                className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                </svg>
+                View Image {idx + 1}
+              </button>
+            ) : (
+              <a
+                key={idx}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                </svg>
+                View File {idx + 1}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -221,7 +280,7 @@ const StudentDashboard = () => {
             <h3 className="mt-4 text-lg font-medium text-gray-900">
               No exams attempted yet
             </h3>
-            <p className="mt-2 text-gray-500">{`You haven't taken any exams. Visit the exams page to get started.`}</p>
+            <p className="mt-2 text-gray-600">{`You haven't taken any exams. Visit the exams page to get started.`}</p>
             <button
               onClick={() => router.push("/exams")}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -256,7 +315,7 @@ const StudentDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {attempts.map((attempt, index) => (
+                  {attempts.map((attempt) => (
                     <tr key={attempt._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
@@ -274,7 +333,7 @@ const StudentDashboard = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {attempt.obtainedMarks || 0} /
+                          {attempt.obtainedMarks || 0} /{" "}
                           {attempt.totalMarks || 0}
                         </div>
                         <div
@@ -296,7 +355,6 @@ const StudentDashboard = () => {
                         >
                           View Details
                         </button>
-                       
                       </td>
                     </tr>
                   ))}
@@ -307,16 +365,53 @@ const StudentDashboard = () => {
         )}
       </div>
 
+      {/* Image Modal for full-size view */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center "
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-full p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={selectedImage}
+              alt="Full size"
+              className="max-w-full max-h-screen object-contain"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white  rounded-full p-2 hover:bg-opacity-75 transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Feedback Modal */}
       {showFeedbackModal && selectedExam && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0  transition-opacity"
+              className="fixed  transition-opacity"
               onClick={() => setShowFeedbackModal(false)}
             ></div>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
@@ -389,6 +484,18 @@ const StudentDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Overall Feedback */}
+                    {selectedExam.overallFeedback && (
+                      <div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <h4 className="font-semibold text-purple-800 mb-2">
+                          Overall Feedback from Teacher:
+                        </h4>
+                        <p className="text-purple-700">
+                          {selectedExam.overallFeedback}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Question-wise Results */}
                     <div>
                       <h4 className="font-semibold text-gray-800 mb-3">
@@ -454,10 +561,15 @@ const StudentDashboard = () => {
                                 )}
                             </div>
 
-                            {/* Teacher Feedback */}
+                            {/* Display Uploaded Files/Images */}
+                            {renderFileAttachments(answer)}
+
+                            {/* Teacher Feedback for this question */}
                             {answer.teacherFeedback && (
                               <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
-                                <p className="text-blue-600 font-medium">{`Teacher's Feedback:`}</p>
+                                <p className="text-blue-600 font-medium">
+                                 {` Teacher's Feedback:`}
+                                </p>
                                 <p className="text-blue-800">
                                   {answer.teacherFeedback}
                                 </p>
