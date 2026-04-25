@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import axios from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -19,16 +20,10 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const classOptions = [
-    "Class 6",
-    "Class 7",
-    "Class 8",
-    "Class 9",
-    "Class 10",
-  ];
+  const classOptions = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"];
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -66,10 +61,6 @@ export default function SignupPage() {
       newErrors.className = "Please select a class";
     }
 
-    if (!formData.rollNumber.trim()) {
-      newErrors.rollNumber = "Roll number is required";
-    }
-
     if (!formData.schoolName.trim()) {
       newErrors.schoolName = "School name is required";
     }
@@ -77,7 +68,7 @@ export default function SignupPage() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -93,14 +84,13 @@ export default function SignupPage() {
         email: formData.email,
         password: formData.password,
         className: formData.className,
-        rollNumber: formData.rollNumber,
         schoolName: formData.schoolName,
         role: "student",
       });
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      // router.push("/login");
+      router.back();
     } catch (error: any) {
       console.error("Signup error:", error);
       setErrors({
@@ -283,48 +273,9 @@ export default function SignupPage() {
                   </div>
                 </div>
                 {errors.className && (
-                  <p className="mt-1 text-xs text-red-600">{errors.className}</p>
-                )}
-              </div>
-
-              {/* Roll Number */}
-              <div>
-                <label
-                  htmlFor="rollNumber"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Roll Number <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg
-                      className="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 20h10M5 8h14M5 4h14M5 12h14M5 16h14"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    id="rollNumber"
-                    name="rollNumber"
-                    type="text"
-                    value={formData.rollNumber}
-                    onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 border ${
-                      errors.rollNumber ? "border-red-300" : "border-gray-300"
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
-                    placeholder="Enter your roll number"
-                  />
-                </div>
-                {errors.rollNumber && (
-                  <p className="mt-1 text-xs text-red-600">{errors.rollNumber}</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.className}
+                  </p>
                 )}
               </div>
 
@@ -365,7 +316,9 @@ export default function SignupPage() {
                   />
                 </div>
                 {errors.schoolName && (
-                  <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.schoolName}
+                  </p>
                 )}
               </div>
 
@@ -557,7 +510,8 @@ export default function SignupPage() {
                     />
                   </svg>
                   <span>
-                    All fields marked with <span className="text-red-500">*</span> are required
+                    All fields marked with{" "}
+                    <span className="text-red-500">*</span> are required
                   </span>
                 </p>
               </div>
