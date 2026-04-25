@@ -90,7 +90,7 @@ export default function SignupPage() {
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      router.back();
+      window.history.go(-2);
     } catch (error: any) {
       console.error("Signup error:", error);
       setErrors({
