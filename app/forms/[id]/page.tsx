@@ -1212,7 +1212,7 @@ const PublicFormPage = () => {
 
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => router.push("/user/dashboard")}
+                onClick={() => router.push("/user")}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
               >
                 Go to Dashboard
