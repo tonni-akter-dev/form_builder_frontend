@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
-
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 export default function SignupPage() {
   const [formData, setFormData] = useState({
     username: "",
@@ -21,7 +22,8 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const classOptions = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"];
-
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo");
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -69,12 +71,11 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
   const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
 
@@ -88,15 +89,25 @@ export default function SignupPage() {
         role: "student",
       });
 
+      // ✅ Save token (auto login)
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      router.push("/login");
+
+      document.cookie = `token=${response.data.token}; path=/`;
+
+      // ✅ Success message
+      toast.success("Registration successful! You are now logged in.");
+
+      // ✅ Redirect back to exam
+      if (redirectTo) {
+        window.location.href = redirectTo;
+      } else {
+        window.location.href = "/";
+      }
     } catch (error: any) {
-      console.error("Signup error:", error);
       setErrors({
         form:
           error.response?.data?.msg ||
-          error.response?.data?.message ||
           "Failed to create account. Please try again.",
       });
     } finally {

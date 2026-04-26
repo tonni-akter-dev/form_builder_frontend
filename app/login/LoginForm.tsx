@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react"; 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "@/lib/axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
-
+  const redirectTo = searchParams.get("redirectTo");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -57,6 +58,7 @@ export default function LoginForm() {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       if (redirectTo && !redirectTo.includes("/auth/")) {
+        toast.success("Login successful!");
         window.location.href = redirectTo;
       } else {
         window.location.href = "/admin/forms";
@@ -85,8 +87,8 @@ export default function LoginForm() {
             <p className="mt-2 text-sm text-gray-600">
               {`Don't have an account?`}{" "}
               <Link
-                href="/"
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                href={`/${redirectTo ? `?redirectTo=${redirectTo}` : ""}`}
+                className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign Up
               </Link>
